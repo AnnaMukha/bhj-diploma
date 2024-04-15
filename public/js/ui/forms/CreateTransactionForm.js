@@ -8,7 +8,8 @@ class CreateTransactionForm extends AsyncForm {
    * метод renderAccountsList
    * */
   constructor(element) {
-    super(element)
+    super(element);
+    this.renderAccountsList();
   }
 
   /**
@@ -16,9 +17,21 @@ class CreateTransactionForm extends AsyncForm {
    * Обновляет в форме всплывающего окна выпадающий список
    * */
   renderAccountsList() {
-
+     Account.list(User.current(), (error, response) => {
+      
+      if (error) {
+        throw new Error('error');
+      }
+      if (response.success) {
+        
+       let selectLink = this.element.querySelector('select');
+         selectLink.innerHTML = response.data.reduce((acc, item) => {
+            let el = `<option value = "${item.id}">${item.name}</option>`;
+            return acc + el;
+          }, "");
+      }
+    });
   }
-
   /**
    * Создаёт новую транзакцию (доход или расход)
    * с помощью Transaction.create. По успешному результату
@@ -26,6 +39,16 @@ class CreateTransactionForm extends AsyncForm {
    * в котором находится форма
    * */
   onSubmit(data) {
-
+    Transaction.create(data, (error, response) => {
+      if (error) {
+        throw new Error('error');
+      }
+      if (response && response.success) {
+        this.element.reset();
+        App.update();
+        App.getModal('newIncome').close();
+        App.getModal('newExpense').close();
+      }
+    });
   }
 }
